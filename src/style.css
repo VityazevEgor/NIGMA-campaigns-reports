@@ -203,6 +203,11 @@ body {
   overflow: hidden;
 }
 
+.table-wrap .v-table__wrapper {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
 .clickable-row {
   cursor: pointer;
   transition: background-color 0.15s ease;

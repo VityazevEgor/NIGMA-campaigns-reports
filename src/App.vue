@@ -2,14 +2,21 @@
 import { computed, ref } from 'vue'
 import * as XLSX from 'xlsx'
 
-const templates = [
+const baseTemplates = [
   { id: 1, name: 'Отчет по участникам акции (постоянная акция)' },
   { id: 2, name: 'Отчет по дням проведения акции (постоянная акция)' },
   { id: 10, name: 'Отчет по регистрациям / пересечениям' },
   { id: 11, name: 'Отчет по контрольным метрикам акции' },
 ]
 
-const campaigns = [
+const templates = [
+  ...baseTemplates,
+  ...Array.from({ length: 20 }, (_, index) => index + 1)
+    .filter((id) => !baseTemplates.some((item) => item.id === id))
+    .map((id) => ({ id, name: `Шаблон ${id} (Для теста прокрутки содержимого)` })),
+].sort((a, b) => a.id - b.id)
+
+const baseCampaigns = [
   { id: 1, name: 'Москва 2030', startDate: '21.07.2025', endDate: '21.07.2025' },
   {
     id: 2,
@@ -31,8 +38,27 @@ const campaigns = [
   },
 ]
 
+const campaigns = [
+  ...baseCampaigns,
+  ...Array.from({ length: 20 }, (_, index) => index + 1)
+    .filter((id) => !baseCampaigns.some((item) => item.id === id))
+    .map((id) => {
+      const day = String((id % 28) + 1).padStart(2, '0')
+      const month = String((id % 12) + 1).padStart(2, '0')
+      const nextDay = String(((id + 3) % 28) + 1).padStart(2, '0')
+
+      return {
+        id,
+        name: `Акция ${id} (Для теста прокрутки содержимого)`,
+        startDate: `${day}.${month}.2026`,
+        endDate: `${nextDay}.${month}.2026`,
+      }
+    }),
+].sort((a, b) => a.id - b.id)
+
 const selectedTemplateId = ref(null)
 const selectedCampaignId = ref(null)
+const isExporting = ref(false)
 
 const templateSearch = ref('')
 const campaignSearch = ref('')
@@ -69,34 +95,45 @@ const filteredCampaigns = computed(() => {
 })
 
 const canExport = computed(() => Boolean(selectedTemplate.value && selectedCampaign.value))
+const isExportDisabled = computed(() => !canExport.value || isExporting.value)
 
-function exportXlsx() {
-  if (!canExport.value) return
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
-  const now = new Date()
-  const ts = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-    2,
-    '0',
-  )}-${String(now.getDate()).padStart(2, '0')}`
+async function exportXlsx() {
+  if (!canExport.value || isExporting.value) return
 
-  const reportData = [
-    {
-      'ID шаблона': selectedTemplate.value.id,
-      Шаблон: selectedTemplate.value.name,
-      'ID акции': selectedCampaign.value.id,
-      Акция: selectedCampaign.value.name,
-      'Дата начала': selectedCampaign.value.startDate,
-      'Дата окончания': selectedCampaign.value.endDate,
-      'Дата выгрузки': ts,
-    },
-  ]
+  isExporting.value = true
+  try {
+    const now = new Date()
+    const ts = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      '0',
+    )}-${String(now.getDate()).padStart(2, '0')}`
 
-  const workbook = XLSX.utils.book_new()
-  const worksheet = XLSX.utils.json_to_sheet(reportData)
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Отчет')
+    const reportData = [
+      {
+        'ID шаблона': selectedTemplate.value.id,
+        Шаблон: selectedTemplate.value.name,
+        'ID акции': selectedCampaign.value.id,
+        Акция: selectedCampaign.value.name,
+        'Дата начала': selectedCampaign.value.startDate,
+        'Дата окончания': selectedCampaign.value.endDate,
+        'Дата выгрузки': ts,
+      },
+    ]
 
-  const fileName = `report_template-${selectedTemplate.value.id}_campaign-${selectedCampaign.value.id}_${ts}.xlsx`
-  XLSX.writeFile(workbook, fileName)
+    const workbook = XLSX.utils.book_new()
+    const worksheet = XLSX.utils.json_to_sheet(reportData)
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Отчет')
+
+    const fileName = `report_template-${selectedTemplate.value.id}_campaign-${selectedCampaign.value.id}_${ts}.xlsx`
+    await wait(1000)
+    XLSX.writeFile(workbook, fileName)
+  } finally {
+    isExporting.value = false
+  }
 }
 </script>
 
@@ -133,8 +170,8 @@ function exportXlsx() {
                 <a class="menu-item" href="#">МОНИТОР КОНТРОЛЯ МЕТРИК</a>
                 <a class="menu-item" href="#">ПОКАЗАТЕЛИ ДАШБОРД</a>
                 <a class="menu-item" href="#">ЖУРНАЛ АКТИВНОСТЕЙ</a>
-                <a class="menu-item" href="#">СПЕЦОТЧЕТ</a>
                 <a class="menu-item active" href="#">ОТЧЁТЫ ПО АКЦИЯМ</a>
+                <a class="menu-item" href="#">СПЕЦОТЧЕТ</a>
               </nav>
             </aside>
 
@@ -164,7 +201,8 @@ function exportXlsx() {
                     color="secondary"
                     size="large"
                     append-icon="mdi-file-excel"
-                    :disabled="!canExport"
+                    :disabled="isExportDisabled"
+                    :loading="isExporting"
                     @click="exportXlsx"
                   >
                     Экспорт в XLSX
@@ -185,7 +223,7 @@ function exportXlsx() {
                     class="mb-4"
                   />
                   <div class="table-wrap">
-                    <v-table density="comfortable" fixed-header height="300">
+                    <v-table density="comfortable" fixed-header height="360">
                       <thead>
                         <tr>
                           <th>ID</th>
@@ -222,7 +260,7 @@ function exportXlsx() {
                     class="mb-4"
                   />
                   <div class="table-wrap">
-                    <v-table density="comfortable" fixed-header height="300">
+                    <v-table density="comfortable" fixed-header height="360">
                       <thead>
                         <tr>
                           <th>ID</th>
