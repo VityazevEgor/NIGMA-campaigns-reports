@@ -138,127 +138,119 @@ function exportXlsx() {
               </nav>
             </aside>
 
-            <section class="report-pane">
-              <v-row class="tables-row">
-                <v-col cols="12" lg="6">
-                  <v-card class="panel-card" variant="flat" rounded="lg">
-                    <v-card-title class="block-title">Список шаблонов</v-card-title>
-                    <v-card-text>
-                      <v-text-field
-                        v-model="templateSearch"
-                        density="comfortable"
-                        variant="outlined"
-                        prepend-inner-icon="mdi-magnify"
-                        placeholder="Поиск по шаблонам"
-                        hide-details
-                        class="mb-4"
-                      />
-                      <div class="table-wrap">
-                        <v-table density="comfortable" fixed-header height="260">
-                          <thead>
-                            <tr>
-                              <th>ID</th>
-                              <th>Наименование шаблона</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr
-                              v-for="item in filteredTemplates"
-                              :key="item.id"
-                              class="clickable-row"
-                              :class="{ 'selected-row': selectedTemplateId === item.id }"
-                              @click="selectedTemplateId = item.id"
-                            >
-                              <td>{{ item.id }}</td>
-                              <td>{{ item.name }}</td>
-                            </tr>
-                          </tbody>
-                        </v-table>
-                      </div>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
+          <section class="report-pane">
+            <div class="report-grid">
+              <div class="export-bar">
+                <div class="export-grid">
+                  <v-text-field
+                    :model-value="selectedTemplate?.name || 'Шаблон не выбран'"
+                    label="Шаблон"
+                    variant="outlined"
+                    density="comfortable"
+                    prepend-inner-icon="mdi-file-document-outline"
+                    readonly
+                    hide-details
+                  />
+                  <v-text-field
+                    :model-value="selectedCampaign?.name || 'Акция не выбрана'"
+                    label="Акция"
+                    variant="outlined"
+                    density="comfortable"
+                    prepend-inner-icon="mdi-bullhorn-outline"
+                    readonly
+                    hide-details
+                  />
+                  <v-btn
+                    color="secondary"
+                    size="large"
+                    append-icon="mdi-file-excel"
+                    :disabled="!canExport"
+                    @click="exportXlsx"
+                  >
+                    Экспорт в XLSX
+                  </v-btn>
+                </div>
+              </div>
 
-                <v-col cols="12" lg="6">
-                  <v-card class="panel-card" variant="flat" rounded="lg">
-                    <v-card-title class="block-title">Список акций</v-card-title>
-                    <v-card-text>
-                      <v-text-field
-                        v-model="campaignSearch"
-                        density="comfortable"
-                        variant="outlined"
-                        prepend-inner-icon="mdi-magnify"
-                        placeholder="Поиск по акциям"
-                        hide-details
-                        class="mb-4"
-                      />
-                      <div class="table-wrap">
-                        <v-table density="comfortable" fixed-header height="260">
-                          <thead>
-                            <tr>
-                              <th>ID</th>
-                              <th>Наименование</th>
-                              <th>Дата начала</th>
-                              <th>Дата окончания</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr
-                              v-for="item in filteredCampaigns"
-                              :key="item.id"
-                              class="clickable-row"
-                              :class="{ 'selected-row': selectedCampaignId === item.id }"
-                              @click="selectedCampaignId = item.id"
-                            >
-                              <td>{{ item.id }}</td>
-                              <td>{{ item.name }}</td>
-                              <td>{{ item.startDate }}</td>
-                              <td>{{ item.endDate }}</td>
-                            </tr>
-                          </tbody>
-                        </v-table>
-                      </div>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-              </v-row>
-
-              <v-card class="panel-card selection-card" variant="flat" rounded="lg">
-                <v-card-title class="block-title">Выбрано для экспорта</v-card-title>
-                <v-card-text>
-                  <v-row>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        :model-value="selectedTemplate?.name || 'Шаблон не выбран'"
-                        label="Шаблон"
-                        variant="outlined"
-                        readonly
-                      />
-                    </v-col>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        :model-value="selectedCampaign?.name || 'Акция не выбрана'"
-                        label="Акция"
-                        variant="outlined"
-                        readonly
-                      />
-                    </v-col>
-                  </v-row>
-
-                  <div class="action-row">
-                    <v-btn
-                      color="secondary"
-                      size="large"
-                      append-icon="mdi-file-excel"
-                      :disabled="!canExport"
-                      @click="exportXlsx"
-                    >
-                      Экспорт в XLSX
-                    </v-btn>
+              <v-card class="panel-card section-card" variant="flat" rounded="lg">
+                <v-card-text class="section-content">
+                  <div class="section-title">Шаблон отчета</div>
+                  <v-text-field
+                    v-model="templateSearch"
+                    density="comfortable"
+                    variant="outlined"
+                    prepend-inner-icon="mdi-magnify"
+                    placeholder="Поиск по шаблонам"
+                    hide-details
+                    class="mb-4"
+                  />
+                  <div class="table-wrap">
+                    <v-table density="comfortable" fixed-header height="300">
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Наименование шаблона</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          v-for="item in filteredTemplates"
+                          :key="item.id"
+                          class="clickable-row"
+                          :class="{ 'selected-row': selectedTemplateId === item.id }"
+                          @click="selectedTemplateId = item.id"
+                        >
+                          <td>{{ item.id }}</td>
+                          <td>{{ item.name }}</td>
+                        </tr>
+                      </tbody>
+                    </v-table>
                   </div>
                 </v-card-text>
               </v-card>
-            </section>
+
+              <v-card class="panel-card section-card" variant="flat" rounded="lg">
+                <v-card-text class="section-content">
+                  <div class="section-title">Акция</div>
+                  <v-text-field
+                    v-model="campaignSearch"
+                    density="comfortable"
+                    variant="outlined"
+                    prepend-inner-icon="mdi-magnify"
+                    placeholder="Поиск по акциям"
+                    hide-details
+                    class="mb-4"
+                  />
+                  <div class="table-wrap">
+                    <v-table density="comfortable" fixed-header height="300">
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Наименование</th>
+                          <th>Дата начала</th>
+                          <th>Дата окончания</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          v-for="item in filteredCampaigns"
+                          :key="item.id"
+                          class="clickable-row"
+                          :class="{ 'selected-row': selectedCampaignId === item.id }"
+                          @click="selectedCampaignId = item.id"
+                        >
+                          <td>{{ item.id }}</td>
+                          <td>{{ item.name }}</td>
+                          <td>{{ item.startDate }}</td>
+                          <td>{{ item.endDate }}</td>
+                        </tr>
+                      </tbody>
+                    </v-table>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </div>
+          </section>
           </div>
         </div>
       </main>
