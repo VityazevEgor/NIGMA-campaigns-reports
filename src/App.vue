@@ -102,35 +102,30 @@ function wait(ms) {
 }
 
 async function exportXlsx() {
-  if (!canExport.value || isExporting.value) return
+  if (isExporting.value) return
 
   isExporting.value = true
   try {
-    const now = new Date()
-    const ts = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-      2,
-      '0',
-    )}-${String(now.getDate()).padStart(2, '0')}`
-
-    const reportData = [
-      {
-        'ID шаблона': selectedTemplate.value.id,
-        Шаблон: selectedTemplate.value.name,
-        'ID акции': selectedCampaign.value.id,
-        Акция: selectedCampaign.value.name,
-        'Дата начала': selectedCampaign.value.startDate,
-        'Дата окончания': selectedCampaign.value.endDate,
-        'Дата выгрузки': ts,
-      },
-    ]
-
     const workbook = XLSX.utils.book_new()
-    const worksheet = XLSX.utils.json_to_sheet(reportData)
+    const worksheet = XLSX.utils.aoa_to_sheet([
+      ['Тут будет отчёт согласно выбранному шаблону'],
+    ])
+
+    worksheet['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }]
+    worksheet['!cols'] = [{ wch: 64 }]
+    worksheet['!rows'] = [{ hpt: 36 }]
+
+    if (worksheet.A1) {
+      worksheet.A1.s = {
+        font: { sz: 24, bold: true },
+        alignment: { horizontal: 'left', vertical: 'center' },
+      }
+    }
+
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Отчет')
 
-    const fileName = `report_template-${selectedTemplate.value.id}_campaign-${selectedCampaign.value.id}_${ts}.xlsx`
     await wait(1000)
-    XLSX.writeFile(workbook, fileName)
+    XLSX.writeFile(workbook, 'report_template.xlsx')
   } finally {
     isExporting.value = false
   }
