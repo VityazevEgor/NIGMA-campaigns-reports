@@ -165,7 +165,7 @@ async function exportXlsx() {
                 <a class="menu-item" href="#">МОНИТОР КОНТРОЛЯ МЕТРИК</a>
                 <a class="menu-item" href="#">ПОКАЗАТЕЛИ ДАШБОРД</a>
                 <a class="menu-item" href="#">ЖУРНАЛ АКТИВНОСТЕЙ</a>
-                <a class="menu-item active" href="#">ОТЧЁТЫ ПО АКЦИЯМ</a>
+                <a class="menu-item active" href="#">ОТЧЕТЫ ПО АКЦИЯМ</a>
                 <a class="menu-item" href="#">СПЕЦОТЧЕТ</a>
               </nav>
             </aside>
